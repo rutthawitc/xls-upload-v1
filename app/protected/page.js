@@ -55,7 +55,9 @@ const UploadPage = () => {
       currentDate +
       ' มีจำนวน ' +
       rowsJsonData.length +
-      ' รายการ';
+      ' รายการ \n' +
+      stringData +
+      '\n กรุณาตรวจสอบในระบบ http://110.76.155.100:10002/';
 
     const res = await fetch('/api/notify', {
       method: 'POST',
@@ -69,7 +71,7 @@ const UploadPage = () => {
     } else {
       toast.success('แจ้งเตือนทาง LINE สำเร็จ!', {
         position: 'top-center',
-        autoClose: 3000,
+        autoClose: 1000,
         hideProgressBar: false,
         closeOnClick: true,
         pauseOnHover: true,
@@ -157,6 +159,7 @@ const UploadPage = () => {
     filterType: 'dropdown',
     responsive: 'vertical',
     searchPlaceholder: 'ป้อนคำเพื่อค้นหา...',
+    print: false,
     customSearch: (searchQuery, currentRow, columns) => {
       let isFound = false;
       currentRow.forEach((col) => {
@@ -189,6 +192,43 @@ const UploadPage = () => {
     };
   });
 
+  //console.log(rowsJsonData);
+
+  // Prepare rows data for Line Notify
+  const dataForLine = rowsData.map((data) => {
+    return {
+      //doc_no: data[0]?.toString(), // convert to string if it's a number
+      //trans_type: data[1],
+      due_date: data[2],
+      recipient: data[3],
+      amount: data[4]?.toString(),
+    };
+  });
+
+  //console.log(dataForLine);
+
+  // Sort JSON data by recipient, due date, and amount
+  dataForLine.sort((a, b) => {
+    if (a.recipient !== b.recipient) {
+      return a.recipient.localeCompare(b.recipient);
+    }
+    if (a.due_date !== b.due_date) {
+      return new Date(a.due_date) - new Date(b.due_date);
+    }
+    return (
+      parseFloat(a.amount.replace(/,/g, '')) -
+      parseFloat(b.amount.replace(/,/g, ''))
+    );
+  });
+
+  // Convert sorted JSON data to a string with new lines
+  const stringData = dataForLine
+    .map((item) => {
+      return `ผู้รับ: ${item.recipient}, วันที่: ${item.due_date}, จํานวน: ${item.amount}`;
+    })
+    .join('\n');
+
+  console.log(stringData);
   //console.log(rowsJsonData.length);
 
   // Convert array of objects to JSON string
@@ -276,11 +316,18 @@ const UploadPage = () => {
             <span>ส่งแจ้งเตือนทาง Line</span>
           </button>
 
+          {/* <button
+            // onClick={importFromSAP}
+            className='flex-none bg-cyan-500 text-white p-4 rounded-md focus:shadow-outline hover:bg-cyan-700'>
+            <span>นำเข้าจาก SAP</span>
+          </button> */}
+
           <button
             onClick={() => signOut({ callbackUrl: '/' })}
             className='flex-none bg-rose-400 text-white p-4 rounded-md focus:shadow-outline hover:bg-rose-500'>
             <span>ออกจากระบบ</span>
           </button>
+
           <ToastContainer />
         </div>
 

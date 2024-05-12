@@ -57,7 +57,7 @@ const Page = () => {
       options: {
         filter: true,
         sort: true,
-        sortDescFirst: true,
+        sortDescFirst: false,
       },
     },
     {
@@ -85,6 +85,7 @@ const Page = () => {
     filterType: 'dropdown',
     responsive: 'vertical',
     searchPlaceholder: 'ป้อนคำเพื่อค้นหา...',
+    print: false,
     customSearch: (searchQuery, currentRow, columns) => {
       let isFound = false;
       currentRow.forEach((col) => {
@@ -93,6 +94,14 @@ const Page = () => {
         }
       });
       return isFound;
+    },
+    customSort: (data, colIndex, order, meta) => {
+      return data.sort((a, b) => {
+        return (
+          (a.data[colIndex].length < b.data[colIndex].length ? -1 : 1) *
+          (order === 'desc' ? 1 : -1)
+        );
+      });
     },
   };
 
@@ -116,7 +125,13 @@ const Page = () => {
           </button>
         </Link>
       </div>
+
       <div className='m-3'>
+        <div className='bg-rose-400 p-3 mt-3 w-full rounded-md align-baseline text-left'>
+          <span className='text-xl font-bold text-slate-800'>
+            ใช้ปุ่มแว่นขยายเพื่อค้นหาข้อมูล
+          </span>
+        </div>
         {rowsData.length > 0 && (
           <MUIDataTable
             title={'ตารางการจ่ายเงิน'}
@@ -138,7 +153,7 @@ const Page = () => {
       </div>
       <ToastContainer
         position='top-right'
-        autoClose={5000}
+        autoClose={1500}
         hideProgressBar={false}
         newestOnTop={false}
         closeOnClick
