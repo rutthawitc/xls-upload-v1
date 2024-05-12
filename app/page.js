@@ -79,6 +79,7 @@ const Page = () => {
   ];
   const options = {
     selectableRows: 'none',
+    searchAlwaysOpen: true,
     rowsPerPage: 25,
     rowsPerPageOptions: [25, 50, 100, 150, 200],
     filter: true,
