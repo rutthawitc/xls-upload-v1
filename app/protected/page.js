@@ -6,12 +6,14 @@ import MUIDataTable from 'mui-datatables';
 
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import axios from 'axios';
 
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
+import { convertToThaiBaht, excelSerialNumberToDate } from '@/utils/utils';
 
 const UploadPage = () => {
   const [file, setFile] = useState(null);
@@ -31,6 +33,12 @@ const UploadPage = () => {
       router.push('/login');
     }
   }, [status, router]);
+
+  const ref = useRef(null);
+  const reset = () => {
+    ref.current.value = '';
+    ref.current.files = null;
+  };
 
   const handleFileChange = (e) => {
     // console.log('file is:', e.target.files[0]);
@@ -83,31 +91,6 @@ const UploadPage = () => {
     }
   };
 
-  function excelSerialNumberToDate(serialNumber) {
-    // Convert the serial number to milliseconds since January 1, 1970
-    const milliseconds = (serialNumber - 25569) * 86400 * 1000;
-    // Create a new Date object
-    const date = new Date(milliseconds);
-    // Get day, month, and year
-    const day = date.getDate();
-    const month = date.getMonth() + 1;
-    const year = date.getFullYear() + 543;
-    // Return the date in Thai date format (DD/MM/YYYY)
-    return `${day}/${month}/${year}`;
-  }
-
-  function convertToThaiBaht(number) {
-    // Convert number to string and split into integer and decimal parts
-    const [integerPart, decimalPart] = number.toFixed(2).toString().split('.');
-    // Add commas for thousands separators
-    const formattedIntegerPart = integerPart.replace(
-      /\B(?=(\d{3})+(?!\d))/g,
-      ','
-    );
-    // Return formatted string with Thai Baht symbol
-    return `${formattedIntegerPart}.${decimalPart}`;
-  }
-
   const handleFileUpload = () => {
     if (!file) {
       toast.warn('โปรดเลือกไฟล์เพื่อตรวจสอบข้อมูล', {
@@ -129,6 +112,7 @@ const UploadPage = () => {
       const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
       //console.log(jsonData);
       setXcelData(jsonData);
+      reset();
     };
     reader.readAsArrayBuffer(file);
     toast.info('โปรดตรวจสอบข้อมุล!', {
@@ -292,20 +276,24 @@ const UploadPage = () => {
           accept='.xlsx, .xls'
           required
           onChange={handleFileChange}
-          className='block w-full text-lg text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400'
+          ref={ref}
+          //className='block w-4/6 text-lg text-gray-800 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none'
+          className='text-xl text-blue-800 bg-slate-400 rounded-md file:mr-5 file:py-1 file:px-3 file:border-[1px] file:rounded-md file:text-xl file:font-medium  file:bg-orange-400 file:text-stone-700 hover:cursor-pointer hover:file:bg-blue-50 hover:file:text-blue-700'
         />
         <p className='mt-1 mb-3 text-sm text-slate-900' id='file_input_help'>
-          <span className='font-medium'>เฉพาะไฟล์ .xlsx และ .xls เท่านั้น</span>
+          <span className='font-medium text-xl text-red-500'>
+            เฉพาะไฟล์ .xlsx และ .xls เท่านั้น
+          </span>
         </p>
-        <div className='flex flex-row items-center gap-x-32'>
+        <div className='flex justify-start gap-x-6 w-4/6 mt-4'>
           <button
             onClick={handleFileUpload}
-            className='flex-none bg-red-700 text-white p-4 rounded-md focus:shadow-outline hover:bg-red-600'>
+            className=' bg-red-700 text-white p-4 rounded-md focus:shadow-outline hover:bg-red-600'>
             <span>ตรวจสอบข้อมูล</span>
           </button>
           <button
             onClick={handleSubmit}
-            className='flex-none bg-blue-400 text-white p-4 rounded-md focus:shadow-outline hover:bg-blue-600'>
+            className=' bg-blue-400 text-white p-4 rounded-md focus:shadow-outline hover:bg-blue-600'>
             <span>บันทึกข้อมูล</span>
           </button>
 
@@ -316,15 +304,9 @@ const UploadPage = () => {
             <span>ส่งแจ้งเตือนทาง Line</span>
           </button>
 
-          {/* <button
-            // onClick={importFromSAP}
-            className='flex-none bg-cyan-500 text-white p-4 rounded-md focus:shadow-outline hover:bg-cyan-700'>
-            <span>นำเข้าจาก SAP</span>
-          </button> */}
-
           <button
             onClick={() => signOut({ callbackUrl: '/' })}
-            className='flex-none bg-rose-400 text-white p-4 rounded-md focus:shadow-outline hover:bg-rose-500'>
+            className=' bg-rose-400 text-white p-4 rounded-md focus:shadow-outline hover:bg-rose-500'>
             <span>ออกจากระบบ</span>
           </button>
 
