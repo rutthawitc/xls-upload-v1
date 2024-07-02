@@ -13,7 +13,11 @@ import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-import { convertToThaiBaht, excelSerialNumberToDate } from '@/utils/utils';
+import {
+  convertToThaiBaht,
+  excelSerialNumberToDate,
+  transformRowsData,
+} from '@/utils/utils';
 
 const UploadPage = () => {
   const [file, setFile] = useState(null);
@@ -64,7 +68,6 @@ const UploadPage = () => {
       ' มีจำนวน ' +
       rowsJsonData.length +
       ' รายการ \n' +
-      stringData +
       '\n กรุณาตรวจสอบในระบบ http://110.76.155.100:10002/';
 
     const res = await fetch('/api/notify', {
@@ -110,7 +113,7 @@ const UploadPage = () => {
       const workbook = XLSX.read(e.target.result, { type: 'binary' });
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
       const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-      //console.log(jsonData);
+      //console.log('JSON :', jsonData);
       setXcelData(jsonData);
       reset();
     };
@@ -142,6 +145,7 @@ const UploadPage = () => {
     filter: true,
     filterType: 'dropdown',
     responsive: 'vertical',
+    searchAlwaysOpen: true,
     searchPlaceholder: 'ป้อนคำเพื่อค้นหา...',
     print: false,
     customSearch: (searchQuery, currentRow, columns) => {
@@ -163,10 +167,12 @@ const UploadPage = () => {
     convertToThaiBaht(row[6]),
   ]);
 
-  // console.log(rowsData);
+  console.log('ROW DATA:', rowsData);
+  const transformedRows = transformRowsData(rowsData);
+  console.log('TRANSFORMED ROWS:', transformedRows);
 
   // Convert array to JSON format
-  const rowsJsonData = rowsData.map((data) => {
+  const rowsJsonData = transformedRows.map((data) => {
     return {
       doc_no: data[0]?.toString(), // convert to string if it's a number
       trans_type: data[1],
@@ -179,7 +185,7 @@ const UploadPage = () => {
   //console.log(rowsJsonData);
 
   // Prepare rows data for Line Notify
-  const dataForLine = rowsData.map((data) => {
+  const dataForLine = transformedRows.map((data) => {
     return {
       //doc_no: data[0]?.toString(), // convert to string if it's a number
       //trans_type: data[1],
@@ -206,13 +212,13 @@ const UploadPage = () => {
   });
 
   // Convert sorted JSON data to a string with new lines
-  const stringData = dataForLine
+  /*   const stringData = dataForLine
     .map((item) => {
       return `ผู้รับ: ${item.recipient}, วันที่: ${item.due_date}, จํานวน: ${item.amount}`;
     })
     .join('\n');
 
-  console.log(stringData);
+  console.log(stringData); */
   //console.log(rowsJsonData.length);
 
   // Convert array of objects to JSON string
@@ -319,10 +325,10 @@ const UploadPage = () => {
           </div>
         )}
 
-        {rowsData.length > 0 && (
+        {transformedRows.length > 0 && (
           <MUIDataTable
             title={'โปรดตรวจสอบข้อมุล'}
-            data={rowsData}
+            data={transformedRows}
             columns={columns}
             options={options}
             className='mt-3'

@@ -1,3 +1,12 @@
+// transformData.js
+import { nameReplacements } from '@/data/replacements.js';
+
+/**
+ * Convert a number to Thai Baht format.
+ *
+ * @param {number} number - The number to convert to Thai Baht format
+ * @return {string} The formatted string with Thai Baht symbol
+ */
 export function convertToThaiBaht(number) {
   // Convert number to string and split into integer and decimal parts
   const [integerPart, decimalPart] = number.toFixed(2).toString().split('.');
@@ -21,4 +30,14 @@ export function excelSerialNumberToDate(serialNumber) {
   const year = date.getFullYear() + 543;
   // Return the date in Thai date format (DD/MM/YYYY)
   return `${day}/${month}/${year}`;
+}
+
+export function transformRowsData(rowsData) {
+  return rowsData.map((row) => {
+    const newRow = [...row];
+    if (row[3] in nameReplacements) {
+      newRow[3] = nameReplacements[row[3]];
+    }
+    return newRow;
+  });
 }
